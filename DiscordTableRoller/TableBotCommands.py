@@ -53,7 +53,12 @@ class TableBotCommands:
             out_str = ''.join(("I can't roll nothing. Try `",ctx.prefix,"table` to", \
                       " get a list of loaded tables."))
         else:
-            out_str = ''.join(self.bot.roll_table(cmd[2]))
+            out_lst = []
+            for table in cmd[2:]:
+                out_lst.extend(self.bot.roll_table(table))
+                if table != cmd[-1]:
+                    out_lst.append('\n')
+            out_str = ''.join(out_lst)
         await self.bot.say(out_str)
 
     def cmd_split(self, ctx: commands.Context):

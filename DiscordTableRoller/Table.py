@@ -17,6 +17,7 @@ class Table:
         self.data = {}
         self.weighted = False
         self.briefs = False
+        self.descriptions = False
         self.out_of = 0
 
         contents = list(contents)
@@ -31,6 +32,8 @@ class Table:
                 self.weighted = True
             elif contents[1][i] == 'brief':
                 self.briefs = True
+            elif contents[1][i] == 'description':
+                self.description = True
 
         for row in contents[2:]:
             row_dict = {}
@@ -92,8 +95,10 @@ class Table:
                         and pair[0] != 'description':
 
                         out_lst.extend((pair[0],': ',pair[1],'\n'))
-                if 'description' in self.data[name]:
+                if self.descriptions:
                     out_lst.extend(('\n',self.data[name]['description']))
+                elif self.briefs:
+                    out_lst.extend(('\n',self.data[name]['brief']))
                 out_lst.append('```')
 
             elif data_type in self.data[name]:

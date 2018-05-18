@@ -1,3 +1,1 @@
-Add multi-table rolling
 Look into recursive tables
-Unicode support possible?
