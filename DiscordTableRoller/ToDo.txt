@@ -1,0 +1,4 @@
+Add multi-table rolling
+Look into recursive tables
+Add the ability to use '' and "" to add spaces to names in the commands
+Unicode support possible?
