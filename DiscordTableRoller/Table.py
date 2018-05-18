@@ -92,7 +92,9 @@ class Table:
                         and pair[0] != 'description':
 
                         out_lst.extend((pair[0],': ',pair[1],'\n'))
-                out_lst.extend(('\n',self.data[name]['description'],'```'))
+                if 'description' in self.data[name]:
+                    out_lst.extend(('\n',self.data[name]['description']))
+                out_lst.append('```')
 
             elif data_type in self.data[name]:
                 out_lst.extend(('```\n',name,':\n',data_type,': ', \

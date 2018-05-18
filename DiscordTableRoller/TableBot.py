@@ -27,7 +27,7 @@ class TableBot(commands.Bot):
         self.tables.clear()
         for filename in glob.glob("tables/*.csv"):
             with open(filename, 'r') as csvfile:
-                dialect = csv.Sniffer().sniff(csvfile.read(1024))
+                dialect = csv.Sniffer().sniff(csvfile.read(2048))
                 csvfile.seek(0)
                 Table(csv.reader(csvfile, dialect), self.tables)
 

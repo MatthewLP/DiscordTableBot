@@ -1,6 +1,6 @@
 from TableBot import TableBot
 
-bot = TableBot(command_prefix='?', description='')
+bot = TableBot(command_prefix='--', description='')
 
 @bot.event
 async def on_ready():
