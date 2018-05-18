@@ -52,7 +52,7 @@ class TableBot(commands.Bot):
             else:
                 out_lst.extend(self.tables[name].query(item_name,data_type))
         else:
-            out_lst.extend(('There is no table called ',name,'.'))
+            out_lst.extend(('There is no table called `',name,'`.'))
 
         return out_lst
 
