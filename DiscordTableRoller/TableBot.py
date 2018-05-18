@@ -2,6 +2,7 @@ import asyncio
 import glob
 import discord
 import csv
+import io
 from discord.ext import commands
 
 from Table import Table
@@ -26,8 +27,8 @@ class TableBot(commands.Bot):
     def load_files(self):
         self.tables.clear()
         for filename in glob.glob("tables/*.csv"):
-            with open(filename, 'r') as csvfile:
-                dialect = csv.Sniffer().sniff(csvfile.read(2048))
+            with io.open(filename, 'r', encoding='utf8') as csvfile:
+                dialect = csv.Sniffer().sniff(csvfile.read())
                 csvfile.seek(0)
                 Table(csv.reader(csvfile, dialect), self.tables)
 
