@@ -1,6 +1,7 @@
 from discord.ext import commands
 
 import TableBot
+import shlex
 
 class TableBotCommands:
     """This class houses all the commands used in TableBot"""
@@ -56,7 +57,7 @@ class TableBotCommands:
         await self.bot.say(out_str)
 
     def cmd_split(self, ctx: commands.Context):
-        return ctx.message.content.split()
+        return shlex.split(ctx.message.content)
 
 def setup(bot: TableBot):
     bot.add_cog(TableBotCommands(bot))
