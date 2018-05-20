@@ -1,6 +1,7 @@
 import csv
 import asyncio
 import random
+import io
 
 class Table:
     """
@@ -8,47 +9,49 @@ class Table:
     with the indevidual tables loaded into the bot
     """
 
-    def __init__(self, contents: csv.DictReader, container = {}):
+    def __init__(self, filepath, container = {}, parents = []):
         '''
-        :param contents: the contents of a csv
-                type: csv.DictReader
-        :param container: the dict containing all Table names
-                type: dict'''
+        :param filepath: the path to the file to attempt to load
+                type: string
+        :param container: (optional) a dictionary to which all Table aliases
+                          will be added as keys to this table
+                type: dict
+        :param parents: (optional) a list of all parent table paths, used
+                        to ensure infinite recursion does not occur
+                type: list'''
         self.data = {}
-        self.weighted = False
-        self.briefs = False
-        self.descriptions = False
+        self.columns = {}
+        self.aliases = []
+        self.filepath = filepath
         self.out_of = 0
-
-        contents = list(contents)
+        
+        with io.open(filepath, 'r', encoding='utf8') as csvfile:
+            dialect = csv.Sniffer().sniff(csvfile.read())
+            csvfile.seek(0)
+            contents = list(csv.reader(csvfile, dialect))
 
         for alias in contents[0]:
             container[alias] = self
-
+            self.aliases.append(alias)
+        
+            j = 0
+            used_columns = []
         for i in range(len(contents[1])):
             if contents[1][i] == 'name':
                 name_index = i
-            elif contents[1][i] == 'p_weight':
-                self.weighted = True
-            elif contents[1][i] == 'brief':
-                self.briefs = True
-            elif contents[1][i] == 'description':
-                self.description = True
+            elif contents[1][i] != '':
+                self.columns[contents[1][i]] = j
+                used_columns.append(i)
+                j += 1
 
         for row in contents[2:]:
-            row_dict = {}
+            row_lst = []
 
-            self.data[row[name_index]] = row_dict
+            for i in used_columns:
+                row_lst.append(row[i])
 
-            for i in range(len(row)):
-                if i != name_index:
-                    if contents[1][i] == '':
-                        break
-                    row_dict[contents[1][i]] = row[i]
-
-            self.out_of += int(row_dict.get('p_weight',1))
-
-        self.data_order = self.data.items()
+            self.out_of += self._p_weight(row_lst)
+            self.data[row[name_index]] = tuple(row_lst)
 
     def roll(self):
         '''sellects one of the items at random (weighted if the 
@@ -57,16 +60,16 @@ class Table:
                 item's name and its brief if the table had that colomn'''
         loc = random.randint(0,self.out_of - 1)
         total = 0
-        itr = iter(self.data_order)
+        itr = iter(self.data)
         while True:
             at = next(itr)
-            total += int(at[1].get('p_weight',1))
+            total += self._p_weight(self.data[at])
             if loc < total:
                 break
 
-        out_lst = [at[0]]
-        if self.briefs:
-            out_lst.extend((": ",at[1]['brief']))
+        out_lst = [at]
+        if 'brief' in self.columns:
+            out_lst.extend((": ",self._get_data(at,'brief')))
 
         return out_lst
 
@@ -88,22 +91,21 @@ class Table:
         if name in self.data:
             if data_type == None:
                 out_lst.extend(('```\n',name,':\n'))
-                item_data = self.data[name].items()
-                for pair in item_data:
-                    if pair[0] != 'p_weight'   \
-                        and pair[0] != 'brief' \
-                        and pair[0] != 'description':
+                for c_key in self.columns:
+                    if c_key != 'p_weight'   \
+                        and c_key != 'brief' \
+                        and c_key != 'description':
+                        out_lst.extend((c_key,': ',self._get_data(name, c_key),'\n'))
 
-                        out_lst.extend((pair[0],': ',pair[1],'\n'))
-                if self.descriptions:
-                    out_lst.extend(('\n',self.data[name]['description']))
-                elif self.briefs:
-                    out_lst.extend(('\n',self.data[name]['brief']))
+                if 'description' in self.columns:
+                    out_lst.extend(('\n',self._get_data(name,'description')))
+                elif 'brief' in self.columns:
+                    out_lst.extend(('\n',self._get_data(name,'brief')))
                 out_lst.append('```')
 
-            elif data_type in self.data[name]:
+            elif data_type in self.columns:
                 out_lst.extend(('```\n',name,':\n',data_type,': ', \
-                         self.data[name][data_type],'```'))
+                         self._get_data(name,data_type),'```'))
             else:
                 out_lst.extend(('`',name,'` does not have any `', \
                     data_type,'`.'))
@@ -115,3 +117,10 @@ class Table:
     def get_item_names(self):
         return self.data.keys()
 
+    def _p_weight(self, row):
+        return int(row[self.columns['p_weight']]) \
+               if 'p_weight' in self.columns \
+               else 1
+
+    def _get_data(self, row_name: str, column_name: str):
+        return self.data[row_name][self.columns[column_name]]

@@ -27,10 +27,7 @@ class TableBot(commands.Bot):
     def load_files(self):
         self.tables.clear()
         for filename in glob.glob("tables/*.csv"):
-            with io.open(filename, 'r', encoding='utf8') as csvfile:
-                dialect = csv.Sniffer().sniff(csvfile.read())
-                csvfile.seek(0)
-                Table(csv.reader(csvfile, dialect), self.tables)
+            Table(filename, self.tables)
 
         return True
 
