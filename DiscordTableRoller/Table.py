@@ -2,6 +2,7 @@ import csv
 import asyncio
 import random
 import io
+import posixpath
 
 class Table:
     """
@@ -19,10 +20,13 @@ class Table:
         :param parents: (optional) a list of all parent table paths, used
                         to ensure infinite recursion does not occur
                 type: list'''
+        if filepath in parents:
+            raise RecursionError('Can not create a table containing itself')
         self.data = {}
         self.columns = {}
         self.aliases = []
         self.filepath = filepath
+        self.recur = False
         self.out_of = 0
         
         with io.open(filepath, 'r', encoding='utf8') as csvfile:
@@ -30,12 +34,19 @@ class Table:
             csvfile.seek(0)
             contents = list(csv.reader(csvfile, dialect))
 
-        for alias in contents[0]:
-            container[alias] = self
-            self.aliases.append(alias)
+        if contents[0][0] == 'RECURSIVE':
+            self.recur = True
+        else:
+            for alias in contents[0]:
+                if alias != '':
+                    container[alias] = self
+                    self.aliases.append(alias)
         
-            j = 0
-            used_columns = []
+        if parents != [] and not self.recur:
+            raise RecursionError('Can not create a recursive table out of a root table')
+
+        j = 0
+        used_columns = []
         for i in range(len(contents[1])):
             if contents[1][i] == 'name':
                 name_index = i
@@ -46,9 +57,13 @@ class Table:
 
         for row in contents[2:]:
             row_lst = []
-
+            
             for i in used_columns:
-                row_lst.append(row[i])
+                if contents[1][i] == 'recur':
+                    row_lst.append(Table(normpath(posixpath.join(filepath,row[i]), \
+                        parents=parents + [filepath])))
+                else:
+                    row_lst.append(row[i])
 
             self.out_of += self._p_weight(row_lst)
             self.data[row[name_index]] = tuple(row_lst)
@@ -69,48 +84,64 @@ class Table:
 
         out_lst = [at]
         if 'brief' in self.columns:
-            out_lst.extend((": ",self._get_data(at,'brief')))
+            out_lst.extend((": ",self.get(at,'brief')))
+        if 'recur' in self.columns:
+            out_lst.append("\n\t")
+            out_lst.extend(self.get(at,'recur').roll())
 
         return out_lst
 
-    def query(self, name: str, data_type = None):
+    def query(self, name: str, *args): 
         '''attempts to retrieve data on param name, all but the 
-        brief & p_wieght if param data_type is None or attempts to 
-        retrieve the data with the key param data_type if either 
-        case fails it returns an error message
+        brief & p_wieght if args is empty or attempts to 
+        retrieve the data or item of a recusive table with the key args[0] if 
+        either case fails it returns an error message
 
         :param name: the name of the object you are attempting to retrive
             type: string
-        :param data_type: the name of the data you are attempting to 
-                          retrive. None returns all but brief & p_weight
-            type: string
+        :param args: the names of the data or recursive table entries you are 
+                     attempting to retrive. empty returns all but brief & p_weight
+            type: tuple of string
         :return: a list of strings to be str.join()-ed before sent to discord
         '''
         out_lst = []
 
         if name in self.data:
-            if data_type == None:
+            if args == ():
                 out_lst.extend(('```\n',name,':\n'))
                 for c_key in self.columns:
                     if c_key != 'p_weight'   \
                         and c_key != 'brief' \
-                        and c_key != 'description':
-                        out_lst.extend((c_key,': ',self._get_data(name, c_key),'\n'))
+                        and c_key != 'description' \
+                        and c_key != 'recur':
+                        out_lst.extend((c_key,': ',self.get(name, c_key),'\n'))
 
                 if 'description' in self.columns:
-                    out_lst.extend(('\n',self._get_data(name,'description')))
+                    out_lst.extend(('\n',self.get(name,'description')))
                 elif 'brief' in self.columns:
-                    out_lst.extend(('\n',self._get_data(name,'brief')))
+                    out_lst.extend(('\n',self.get(name,'brief')))
+
+                if 'recur' in self.columns:
+                    out_lst.append('\n')
+                    out_lst.extend(_p_rolls(name))
                 out_lst.append('```')
 
-            elif data_type in self.columns:
-                out_lst.extend(('```\n',name,':\n',data_type,': ', \
-                         self._get_data(name,data_type),'```'))
+            elif args[0] in self.columns:
+                out_lst.extend(('```\n',name,':\n'))
+                if args[0] != 'recur':
+                    out_lst.extend((args[0],': ', self.get(name,args[0])))
+                else:
+                    out_lst.extend(_p_rolls(name))
+                out_lst.append('```')
+            elif args[0] in self.get(name,'recur').data:
+                out_lst.extend(('```\n',name,': '))
+                out_lst.extend(self.get(name, 'recur').query(*args[1:])[1:])
+
             else:
-                out_lst.extend(('`',name,'` does not have any `', \
-                    data_type,'`.'))
+                out_lst.extend(('','`',name,'` does not have any `', \
+                    args[0],'`.'))
         else:
-            out_lst.extend(('`',name,'` is not an item in this table.'))
+            out_lst.extend(('','`',name,'` is not an item in this table.'))
 
         return out_lst
 
@@ -122,5 +153,11 @@ class Table:
                if 'p_weight' in self.columns \
                else 1
 
-    def _get_data(self, row_name: str, column_name: str):
+    def get(self, row_name: str, column_name: str):
         return self.data[row_name][self.columns[column_name]]
+
+    def _p_rolls(self, row_name: str):
+        out_lst=['Possible rolls:']
+        for key in self.get(row_name,'recur').get_item_names():
+            out_lst.extend((' \"',key,'\"'))
+        return out_lst

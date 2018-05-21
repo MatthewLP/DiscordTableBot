@@ -28,9 +28,7 @@ class TableBotCommands:
             say_lst.insert(0,"The following tables are loaded: \n\n")
             say = ''.join(say_lst)
         elif ctx.invoked_subcommand == None:
-            say = ''.join(self.bot.table_query(cmd[1],\
-                            cmd[2] if len(cmd) > 2 else None,\
-                            cmd[3] if len(cmd) > 3 else None))
+            say = ''.join(self.bot.table_query(*cmd[1:]))
         else:
             return
         await self.bot.say(say)
@@ -55,10 +53,9 @@ class TableBotCommands:
         else:
             out_lst = []
             for table in cmd[2:]:
+                out_lst.append('\n')
                 out_lst.extend(self.bot.roll_table(table))
-                if table != cmd[-1]:
-                    out_lst.append('\n')
-            out_str = ''.join(out_lst)
+            out_str = ''.join(out_lst[1:])
         await self.bot.say(out_str)
 
     def cmd_split(self, ctx: commands.Context):
