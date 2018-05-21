@@ -1,1 +1,2 @@
 Look into recursive tables
+Automate standard tests
