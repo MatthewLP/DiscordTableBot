@@ -1,0 +1,17 @@
+run commands:
+table
+table [table]
+table [not a table]
+table [table with only descriptions] [item] 
+table [table with only briefs] [item] 
+table [table with no descriptions or briefs] [item] 
+table [table with descriptions and briefs] [item] 
+table [table] [not an item]
+table [table] [item] [datum]
+table [table] [item] [not a datum]
+table load
+table roll
+table roll [table with briefs]
+table roll [table with no briefs]
+table roll [not a table]
+table roll [table] [table]
