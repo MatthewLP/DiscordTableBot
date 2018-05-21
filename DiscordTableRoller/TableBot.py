@@ -64,7 +64,7 @@ class TableBot(commands.Bot):
         if name in self.tables:
             out_lst.extend(self.tables[name].roll())
         else:
-            out_lst.extend(('There is no table called ',name,'.'))
+            out_lst.extend(('There is no table called `',name,'`.'))
 
         return out_lst
 

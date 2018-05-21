@@ -133,7 +133,7 @@ class Table:
                 else:
                     out_lst.extend(_p_rolls(name))
                 out_lst.append('```')
-            elif args[0] in self.get(name,'recur').data:
+            elif 'recur' in self.columns and args[0] in self.get(name,'recur').data:
                 out_lst.extend(('```\n',name,': '))
                 out_lst.extend(self.get(name, 'recur').query(*args[1:])[1:])
 
