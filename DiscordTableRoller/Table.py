@@ -155,14 +155,21 @@ class Table:
         return self.data.keys()
 
     def _p_weight(self, row):
+        '''takes a row and returns the probability weight for to that row'''
         return int(row[self.columns['p_weight']]) \
                if 'p_weight' in self.columns      \
                else 1
 
     def get(self, row_name: str, column_name: str):
+        '''Returns the value of the cell in the column_name column and the
+        row_name row raises an exception if the cell does not exist.'''
         return self.data[row_name][self.columns[column_name]]
 
     def _p_rolls(self, row_name: str):
+        '''returns a list of strings of the form ['Possible rolls:',' "',
+key1,'"',' "',key1,'"', etc] for the recursive table in row 
+row_name. If there is no recursive table it raises an 
+exception.'''
         out_lst=['Possible rolls:']
         for key in self.get(row_name,'recur').get_item_names():
             out_lst.extend((' \"',key,'\"'))
