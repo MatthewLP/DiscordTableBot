@@ -2,7 +2,8 @@ import csv
 import asyncio
 import random
 import io
-import posixpath
+#import posixpath
+import os.path as path
 
 class Table:
     """
@@ -30,9 +31,9 @@ class Table:
         self.out_of = 0
         
         with io.open(filepath, 'r', encoding='utf8') as csvfile:
-            dialect = csv.Sniffer().sniff(csvfile.read())
+            #dialect = csv.Sniffer().sniff(csvfile.read())
             csvfile.seek(0)
-            contents = list(csv.reader(csvfile, dialect))
+            contents = list(csv.reader(csvfile))
 
         if contents[0][0] == 'RECURSIVE':
             self.recur = True
@@ -41,7 +42,10 @@ class Table:
                 if alias != '':
                     container[alias] = self
                     self.aliases.append(alias)
-        
+
+        if parents == [] and self.recur:
+            return
+
         if parents != [] and not self.recur:
             raise RecursionError('Can not create a recursive table out of a root table')
 
@@ -56,17 +60,19 @@ class Table:
                 j += 1
 
         for row in contents[2:]:
-            row_lst = []
-            
-            for i in used_columns:
-                if contents[1][i] == 'recur':
-                    row_lst.append(Table(normpath(posixpath.join(filepath,row[i]), \
-                        parents=parents + [filepath])))
-                else:
-                    row_lst.append(row[i])
+            if row[name_index] != 'SKIP':
+                row_lst = []
+                for i in used_columns:
+                    if contents[1][i] == 'recur':
+                        row_lst.append(Table(\
+                            path.normpath(path.join( \
+                                path.dirname(filepath),row[i])), \
+                            parents=parents + [filepath]))
+                    else:
+                        row_lst.append(row[i])
 
-            self.out_of += self._p_weight(row_lst)
-            self.data[row[name_index]] = tuple(row_lst)
+                self.out_of += self._p_weight(row_lst)
+                self.data[row[name_index]] = tuple(row_lst)
 
     def roll(self):
         '''sellects one of the items at random (weighted if the 
@@ -110,8 +116,8 @@ class Table:
             if args == ():
                 out_lst.extend(('```\n',name,':\n'))
                 for c_key in self.columns:
-                    if c_key != 'p_weight'   \
-                        and c_key != 'brief' \
+                    if c_key != 'p_weight'         \
+                        and c_key != 'brief'       \
                         and c_key != 'description' \
                         and c_key != 'recur':
                         out_lst.extend((c_key,': ',self.get(name, c_key),'\n'))
@@ -123,7 +129,7 @@ class Table:
 
                 if 'recur' in self.columns:
                     out_lst.append('\n')
-                    out_lst.extend(_p_rolls(name))
+                    out_lst.extend(self._p_rolls(name))
                 out_lst.append('```')
 
             elif args[0] in self.columns:
@@ -131,11 +137,11 @@ class Table:
                 if args[0] != 'recur':
                     out_lst.extend((args[0],': ', self.get(name,args[0])))
                 else:
-                    out_lst.extend(_p_rolls(name))
+                    out_lst.extend(self._p_rolls(name))
                 out_lst.append('```')
             elif 'recur' in self.columns and args[0] in self.get(name,'recur').data:
                 out_lst.extend(('```\n',name,': '))
-                out_lst.extend(self.get(name, 'recur').query(*args[1:])[1:])
+                out_lst.extend(self.get(name, 'recur').query(*args)[1:])
 
             else:
                 out_lst.extend(('','`',name,'` does not have any `', \
@@ -150,7 +156,7 @@ class Table:
 
     def _p_weight(self, row):
         return int(row[self.columns['p_weight']]) \
-               if 'p_weight' in self.columns \
+               if 'p_weight' in self.columns      \
                else 1
 
     def get(self, row_name: str, column_name: str):

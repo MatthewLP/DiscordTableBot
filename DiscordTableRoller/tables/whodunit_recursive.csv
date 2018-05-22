@@ -1,0 +1,8 @@
+rwhodunit,rWho Dies?,rWhat Happens?,rKill Someone,rRIP,rrip
+p_weight,name,recur,,,
+4,William,./recursive/who_william.csv,,,
+4,Roger,./recursive/who_roger.csv,,,
+4,Ben,./recursive/who_ben.csv,,,
+4,Matthew,./recursive/who_matthew.csv,,,
+4,David,./recursive/who_david.csv,,,
+3,Everyone,./recursive/who_everyone.csv,,,
