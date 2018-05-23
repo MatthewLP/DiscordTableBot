@@ -3,6 +3,7 @@ import glob
 import discord
 import csv
 import io
+import traceback
 from discord.ext import commands
 
 from Table import Table
@@ -25,9 +26,13 @@ class TableBot(commands.Bot):
         #add initalizers for members as needed
 
     def load_files(self):
-        self.tables.clear()
-        for filename in glob.glob("tables/*.csv"):
-            Table(filename, self.tables)
+        try:
+            self.tables.clear()
+            for filename in glob.glob("tables/*.csv"):
+                Table(filename, self.tables)
+        except():
+            traceback.print_exc()
+            return False
 
         return True
 
@@ -44,7 +49,7 @@ class TableBot(commands.Bot):
         :return: a list of strings to be str.join()-ed before being sent to discord'''
         out_lst = []
         if name in self.tables:
-            if item_name == None:
+            if not item_name:
                 out_lst.extend(('All items in ',name,':\n\n'))
                 out_lst.extend(self.discord_item_list(self.tables[name].get_item_names()))
             else:

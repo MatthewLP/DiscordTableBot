@@ -49,30 +49,31 @@ class Table:
         if parents != [] and not self.recur:
             raise RecursionError('Can not create a recursive table out of a root table')
 
-        j = 0
+        columns_index = 0
         used_columns = []
         for i in range(len(contents[1])):
             if contents[1][i] == 'name':
                 name_index = i
             elif contents[1][i] != '':
-                self.columns[contents[1][i]] = j
+                self.columns[contents[1][i]] = columns_index
                 used_columns.append(i)
-                j += 1
+                columns_index += 1
 
         for row in contents[2:]:
-            if row[name_index] != 'SKIP':
-                row_lst = []
-                for i in used_columns:
-                    if contents[1][i] == 'recur':
-                        row_lst.append(Table(\
-                            path.normpath(path.join( \
-                                path.dirname(filepath),row[i])), \
-                            parents=parents + [filepath]))
-                    else:
-                        row_lst.append(row[i])
+            if row[name_index] == 'SKIP':
+                continue
+            row_lst = []
+            for i in used_columns:
+                if contents[1][i] == 'recur':
+                    row_lst.append(Table(\
+                        path.normpath(path.join( \
+                            path.dirname(filepath),row[i])), \
+                        parents=parents + [filepath]))
+                else:
+                    row_lst.append(row[i])
 
-                self.out_of += self._p_weight(row_lst)
-                self.data[row[name_index]] = tuple(row_lst)
+            self.out_of += self._p_weight(row_lst)
+            self.data[row[name_index]] = tuple(row_lst)
 
     def roll(self):
         '''sellects one of the items at random (weighted if the 
@@ -81,11 +82,10 @@ class Table:
                 item's name and its brief if the table had that colomn'''
         loc = random.randint(0,self.out_of - 1)
         total = 0
-        itr = iter(self.data)
-        while True:
-            at = next(itr)
-            total += self._p_weight(self.data[at])
+        for key in self.data:
+            total += self._p_weight(self.data[key])
             if loc < total:
+                at = key
                 break
 
         out_lst = [at]
@@ -97,7 +97,7 @@ class Table:
 
         return out_lst
 
-    def query(self, name: str, *args): 
+    def query(self, name: str, datum_name = None, *rcrsv_call_data): 
         '''attempts to retrieve data on param name, all but the 
         brief & p_wieght if args is empty or attempts to 
         retrieve the data or item of a recusive table with the key args[0] if 
@@ -105,21 +105,20 @@ class Table:
 
         :param name: the name of the object you are attempting to retrive
             type: string
-        :param args: the names of the data or recursive table entries you are 
-                     attempting to retrive. empty returns all but brief & p_weight
-            type: tuple of string
+        :param datum_name: the name of the data or recursive table entry you are 
+                     attempting to retrive. None returns all but brief & p_weight
+            type: string
+        :param rcrsv_call_data: the first item will be used as datum_name in
+                                recursive calls to this method, think lisp
         :return: a list of strings to be str.join()-ed before sent to discord
         '''
         out_lst = []
 
         if name in self.data:
-            if args == ():
+            if datum_name is None:
                 out_lst.extend(('```\n',name,':\n'))
                 for c_key in self.columns:
-                    if c_key != 'p_weight'         \
-                        and c_key != 'brief'       \
-                        and c_key != 'description' \
-                        and c_key != 'recur':
+                    if c_key not in ['p_weight','brief','description','recur']:
                         out_lst.extend((c_key,': ',self.get(name, c_key),'\n'))
 
                 if 'description' in self.columns:
@@ -132,20 +131,20 @@ class Table:
                     out_lst.extend(self._p_rolls(name))
                 out_lst.append('```')
 
-            elif args[0] in self.columns:
+            elif datum_name in self.columns:
                 out_lst.extend(('```\n',name,':\n'))
-                if args[0] != 'recur':
-                    out_lst.extend((args[0],': ', self.get(name,args[0])))
+                if datum_name != 'recur':
+                    out_lst.extend((datum_name,': ', self.get(name,datum_name)))
                 else:
                     out_lst.extend(self._p_rolls(name))
                 out_lst.append('```')
-            elif 'recur' in self.columns and args[0] in self.get(name,'recur').data:
+            elif 'recur' in self.columns and datum_name in self.get(name,'recur').data:
                 out_lst.extend(('```\n',name,': '))
-                out_lst.extend(self.get(name, 'recur').query(*args)[1:])
+                out_lst.extend(self.get(name, 'recur').query(datum_name,*rcrsv_call_data)[1:])
 
             else:
                 out_lst.extend(('','`',name,'` does not have any `', \
-                    args[0],'`.'))
+                    datum_name,'`.'))
         else:
             out_lst.extend(('','`',name,'` is not an item in this table.'))
 
