@@ -1,8 +1,6 @@
-import asyncio
+'''Defines the Table Bot class, a child of discord.py's Bot class and the function
+discord_item_list'''
 import glob
-import discord
-import csv
-import io
 import traceback
 from discord.ext import commands
 
@@ -26,6 +24,7 @@ class TableBot(commands.Bot):
         #add initalizers for members as needed
 
     def load_files(self):
+        '''Attempts to load every csv file in the ./tables/ directory into table objects'''
         try:
             self.tables.clear()
             for filename in glob.glob("tables/*.csv"):
@@ -36,26 +35,26 @@ class TableBot(commands.Bot):
 
         return True
 
-    def table_query(self, name: str, item_name = None, *args):
+    def table_query(self, name: str, item_name=None, *args):
         '''Attempts to retrieve information on the table named param name,
         failure returns error messages to the user
         :param name: an alias for a table
             type: string
         :param item_name: the name of an item in the table (optional)
             type: string
-        :param *args: the names of recursive tables' entries, potentially ending 
+        :param *args: the names of recursive tables' entries, potentially ending
                       with a data type in the last table (optional)
             type: string
         :return: a list of strings to be str.join()-ed before being sent to discord'''
         out_lst = []
         if name in self.tables:
             if not item_name:
-                out_lst.extend(('All items in ',name,':\n\n'))
-                out_lst.extend(self.discord_item_list(self.tables[name].get_item_names()))
+                out_lst.extend(('All items in ', name, ':\n\n'))
+                out_lst.extend(discord_item_list(self.tables[name].get_item_names()))
             else:
-                out_lst.extend(self.tables[name].query(item_name,*args))
+                out_lst.extend(self.tables[name].query(item_name, *args))
         else:
-            out_lst.extend(('There is no table called `',name,'`.'))
+            out_lst.extend(('There is no table called `', name, '`.'))
 
         return out_lst
 
@@ -69,24 +68,24 @@ class TableBot(commands.Bot):
         if name in self.tables:
             out_lst.extend(self.tables[name].roll())
         else:
-            out_lst.extend(('There is no table called `',name,'`.'))
+            out_lst.extend(('There is no table called `', name, '`.'))
 
         return out_lst
 
     def table_list(self):
         '''discord_item_lists all the keys in the table list'''
-        out_lst = self.discord_item_list(self.tables.keys())
+        out_lst = discord_item_list(self.tables.keys())
 
         return out_lst
 
-    def discord_item_list(self, itemiterable):
-        '''
-        :param itemiterable: any iterable object with strings as entries
-        :return: a list of the form:
-                 ['`',key1,'` ','`',key2,'` ','`',key3,'` ', ect...]
-                 ment to be used with str.join() and sent to discord'''
-        out_lst = []
-        for item in itemiterable:
-            out_lst.extend(('`',item,'` '))
+def discord_item_list(itemiterable):
+    '''
+    :param itemiterable: any iterable object with strings as entries
+    :return: a list of the form:
+                ['`',key1,'` ','`',key2,'` ','`',key3,'` ', ect...]
+                ment to be used with str.join() and sent to discord'''
+    out_lst = []
+    for item in itemiterable:
+        out_lst.extend(('`', item, '` '))
 
-        return out_lst
+    return out_lst

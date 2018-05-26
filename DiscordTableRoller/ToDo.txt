@@ -1,2 +1,0 @@
-Look into flattening the recursion in tables both with files and in the program
-Automate standard tests
