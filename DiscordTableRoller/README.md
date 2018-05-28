@@ -12,6 +12,10 @@ To get this up and running for development you would ideally need Visual Studio 
 (although this is not technically required), discord.py, a discord account, and a bot
 account to attach the bot to.
 
+The first thing you must do is create a copy of options.py.template and rename it to
+options.py. Then get your bot account's token and paste it into options.py between the
+quotes to the right of `token`.
+
 ## Deployment
 
 Basically the same as getting started sans the Visual Studio.

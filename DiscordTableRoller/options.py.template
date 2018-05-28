@@ -1,0 +1,7 @@
+﻿'''This file contains all the options used in the Discord Table Roller Bot. Simply
+change anything after an '=' to change it's value within the program'''
+
+command_prefix = '--'
+description = ''
+verbose = True
+token = ""

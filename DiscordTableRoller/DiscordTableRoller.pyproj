@@ -49,6 +49,7 @@
     <Content Include="StandardTests.txt" />
     <Content Include="ToDo.md" />
     <Content Include="weather.csv" />
+    <Content Include="options.py" />
     <Content Include="whodunit_-_test1.csv" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
