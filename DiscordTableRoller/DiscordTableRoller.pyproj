@@ -32,6 +32,9 @@
     <Compile Include="TableBotCommands.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="TableProfile.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Interpreter Include="discordBots\">
