@@ -14,20 +14,17 @@
 
 ## Minor Features to Add
 
-* Settings File and a Way of Loading It
-	* True Settings File Must be Git Ignored
-	* Template Settings File for Others
-
 ## Major Features to Add
 
 * Table profiles
-	* Selections of table directories and files
-	* OPed user accounts
-		* OP required to:
-			* Modify the profile
+	* Selections of **table directories** ~~and files~~
+	* ~~OPed user accounts~~
+		* ~~OP required to:~~
+			* ~~Modify the profile~~
 			* Add the profile to a Scope/Location
-		* Optionally required for:
-			* Activating the Profile
+		* ~~Optionally required for:~~
+			* ~~Activating the Profile~~
+	* Integrate all the above into TableBot and TableBotCommands
 	* (Add More)
 
 * Scopes or Locations

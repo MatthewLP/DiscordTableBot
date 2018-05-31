@@ -35,6 +35,9 @@
     <Compile Include="TableProfile.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="WithOPs_mixin.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Interpreter Include="discordBots\">

@@ -9,7 +9,8 @@ from Table import Table
 #from TableBotCommands import TableBotCommands as Cmds
 
 class TableBot(commands.Bot):
-    """description of class"""
+    '''A discord.py bot with added functionallity for randomly sellecting entries of a
+tables it has loaded and displaying information on those tables to users.'''
 
     def __init__(self, command_prefix, formatter=None, description=None,
                  pm_help=False, **options):
@@ -34,9 +35,22 @@ class TableBot(commands.Bot):
             return False
 
         return True
+    def update(self, extention):
+        '''Adds all (alias, table) pairs in :extention: to the loaded tables.
+:param extention: a collection of (alias, table) pairs
+    Type: a dict: {alias: table,...} or other itterable: [(alias, table),...]'''
+        self.tables.update(extention)
+
+    def remove(self, table: Table):
+        '''Removes all instances of the object :table: from the list of loaded tables
+:param table: a table to be removed
+    type: Table'''
+        for alias in table.aliases:
+            if self.tables.get(alias, False) is table:
+                self.tables.pop(alias)
 
     def table_query(self, name: str, item_name=None, *args):
-        '''Attempts to retrieve information on the table named param name,
+        '''Attempts to retrieve information on the table :name:,
         failure returns error messages to the user
         :param name: an alias for a table
             type: string
