@@ -39,7 +39,7 @@ The first argument of the decorated function must represent a user id string.'''
     def push_op(self, caller_id, new_op_id):
         '''Adds new_op_id to the list of OPs for this object'''
         self.OPs[new_op_id] = False
-        out_lst = ['<@', new_op_id, '> is now an OP for ', self.name]
+        out_lst = ['<@', new_op_id, '> is now an OP for ', self.name, '.']
         return out_lst
 
     @is_op
@@ -48,11 +48,11 @@ The first argument of the decorated function must represent a user id string.'''
         if un_op_id in self.OPs:
             if not self.OPs[un_op_id]:
                 self.OPs.pop(un_op_id, False)
-                out_lst = ['<@', un_op_id, '> is no longer an OP.']
+                out_lst = ['<@', un_op_id, '> is no longer an OP for', self.name, '.']
             else:
-                out_lst = ['You can not deOP the curator of this object.']
+                out_lst = ['You can not deOP the curator of ', self.name,'.']
         else:
-            out_lst = ['<@', un_op_id, '> is not an OP.']
+            out_lst = ['<@', un_op_id, '> is not an OP for', self.name, '.']
         return out_lst
 
     @is_curator

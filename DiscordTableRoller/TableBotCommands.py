@@ -165,7 +165,7 @@ May require OP privilage with the profile'''
         def actual_decorator(func):
             def wraper2(self, ctx):
                 user_id, cmd = id_and_cmd(ctx)
-                name = cmd[2]
+                name = cmd[num_commands]
                 profile = self.bot.get_profile(name)
                 out_lst = []
                 for mention in ctx.message.raw_mentions:
@@ -193,7 +193,7 @@ May require OP privilage with the profile'''
     @_only_need_profile_name(3)
     @_do_on_all_mentions(3)
     def profile_op_revoke(self, profile, op_id, user_id):
-        return profile.push_op(op_id, user_id)
+        return profile.pop_op(op_id, user_id)
 
 def id_and_cmd(ctx: commands.Context):
     '''Returns the message author id and the output of cmd_split'''
