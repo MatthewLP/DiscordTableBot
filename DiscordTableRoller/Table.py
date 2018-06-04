@@ -2,7 +2,6 @@
 import csv
 import random
 import io
-#import posixpath
 import os.path as path
 
 class Table:

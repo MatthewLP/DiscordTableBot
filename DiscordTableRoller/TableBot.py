@@ -5,6 +5,7 @@ import traceback
 from discord.ext import commands
 
 from Table import Table
+from TableProfile import TableProfile
 
 #from TableBotCommands import TableBotCommands as Cmds
 
@@ -21,6 +22,7 @@ tables it has loaded and displaying information on those tables to users.'''
         self.load_extension('TableBotCommands')
 
         self.tables = {}
+        self.profiles = {}
         self.load_files()
         #add initalizers for members as needed
 
@@ -35,6 +37,7 @@ tables it has loaded and displaying information on those tables to users.'''
             return False
 
         return True
+
     def update(self, extention):
         '''Adds all (alias, table) pairs in :extention: to the loaded tables.
 :param extention: a collection of (alias, table) pairs
@@ -49,24 +52,24 @@ tables it has loaded and displaying information on those tables to users.'''
             if self.tables.get(alias, False) is table:
                 self.tables.pop(alias)
 
-    def table_query(self, name: str, item_name=None, *args):
+    def table_query(self, name: str, item_name=None, *rcrsv_call_data):
         '''Attempts to retrieve information on the table :name:,
         failure returns error messages to the user
         :param name: an alias for a table
             type: string
         :param item_name: the name of an item in the table (optional)
             type: string
-        :param *args: the names of recursive tables' entries, potentially ending
+        :param *rcrsv_call_data: the names of recursive tables' entries, potentially ending
                       with a data type in the last table (optional)
             type: string
-        :return: a list of strings to be str.join()-ed before being sent to discord'''
+        :return: a list of strings describing what happened.'''
         out_lst = []
         if name in self.tables:
             if not item_name:
                 out_lst.extend(('All items in ', name, ':\n\n'))
                 out_lst.extend(discord_item_list(self.tables[name].get_item_names()))
             else:
-                out_lst.extend(self.tables[name].query(item_name, *args))
+                out_lst.extend(self.tables[name].query(item_name, *rcrsv_call_data))
         else:
             out_lst.extend(('There is no table called `', name, '`.'))
 
@@ -77,7 +80,7 @@ tables it has loaded and displaying information on those tables to users.'''
         failure returns an error message to the user
         :param name: an alias for a table
             type: string
-        :return: a list of strings to be str.join()-ed before being sent to discord'''
+        :return: a list of strings describing what happened.'''
         out_lst = []
         if name in self.tables:
             out_lst.extend(self.tables[name].roll())
@@ -92,12 +95,46 @@ tables it has loaded and displaying information on those tables to users.'''
 
         return out_lst
 
+    def add_profile(self, name: str, user_id):
+        '''Adds a new profile to the bot named :name: with the curator set to :user_id:
+:param name: the name the profile is to be given.
+    type: string
+:param user_id: A uneque identifier for the user who called this function.
+    type: any hashable
+:return: a list of strings describing what happened.'''
+        if name in self.profiles:
+            out_lst = [name, ' already exists, please try a different name.']
+        else:
+            self.profiles[name] = TableProfile(self, user_id, name)
+            out_lst = [name, ' has been created.']
+        return out_lst
+
+    def get_profile(self, name: str):
+        '''Retrieves the TableProfile with name :name: throws an error if :name: is not
+a profile.
+:param name: the name of the profile to be retrieved
+    type: string
+:return: a TableProfile'''
+        return self.profiles[name]
+
+    def del_profile(self, name: str, user_id):
+        '''Deletes the TableProfile with name :name: if the :user_id: is the curator of the
+profile.'''
+        if name in self.profiles:
+            if self.profiles[name].bool_is_curator(user_id):
+                self.profiles.pop(name)
+                return [name, ' has been deleted.']
+            return ['You do not have permission to delete ', name, '.']
+        return [name, ' is not a profile here.']
+
+    def profile_list(self):
+        return discord_item_list(self.profiles.keys())
+
 def discord_item_list(itemiterable):
     '''
     :param itemiterable: any iterable object with strings as entries
     :return: a list of the form:
-                ['`',key1,'` ','`',key2,'` ','`',key3,'` ', ect...]
-                ment to be used with str.join() and sent to discord'''
+                ['`',item1,'` ','`',item2,'` ','`',item3,'` ', ect...]'''
     out_lst = []
     for item in itemiterable:
         out_lst.extend(('`', item, '` '))

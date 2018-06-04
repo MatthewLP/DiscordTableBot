@@ -7,29 +7,33 @@ class WithOPs_mixin(object):
         self.OPs = {author_id:True} #True = curator, False = not
         self.name = name
 
-    @classmethod
-    def is_op(cls, func):
+    def is_op(func):
         '''Checks that the user who called this function is an OP, if not, an error
 message will be returned as a list of strings
 The first argument of the decorated function must represent a user id string.'''
         def wraper(self, *args, **kwargs):
             if args[0] in self.OPs:
-                return func(*args, **kwargs)
+                return func(self, *args, **kwargs)
             return ['You do not have permission to access ', self.name, '.']
 
         return wraper
 
-    @classmethod
-    def is_curator(cls, func):
+    def is_curator(func):
         '''Checks that the person who called this function is the curator, if not, an error
 message will be returned as a list of strings
 The first argument of the decorated function must represent a user id string.'''
         def wraper(self, *args, **kwargs):
             if self.OPs.get(args[0], False):
-                return func(*args, **kwargs)
+                return func(self, *args, **kwargs)
             return ['You do not have permission to access ', self.name, ' in this way.']
 
         return wraper
+
+    def bool_is_curator(self, user_id):
+        return self.OPs.get(user_id, False)
+
+    def bool_is_op(self, user_id):
+        return user_id in self.OPs
 
     @is_op
     def push_op(self, caller_id, new_op_id):
@@ -58,3 +62,6 @@ The first argument of the decorated function must represent a user id string.'''
         self.OPs[caller_id] = False
         out_lst = ['<@', new_curator_id, '> is now the curator of ', self.name, '.']
         return out_lst
+
+    is_op = staticmethod(is_op)
+    is_curator = staticmethod(is_curator)

@@ -4,7 +4,7 @@ from glob import glob
 from os.path import normpath
 
 from WithOPs_mixin import WithOPs_mixin
-from TableBot import TableBot
+import TableBot
 from Table import Table
 
 class TableProfile(WithOPs_mixin):
@@ -12,8 +12,8 @@ class TableProfile(WithOPs_mixin):
 or unloaded from the bot with one command. Also has a list of OPed accounts that can
 modify the profile. With an option that only OPs can load it (Default off).'''
 
-    def __init__(self, bot: TableBot, creater_id):
-        super().__init__(creater_id)
+    def __init__(self, bot, creater_id, name):
+        super().__init__(creater_id, name)
         self.bot = bot
         self.tables = {}
         self.active = False
@@ -71,17 +71,21 @@ modify the profile. With an option that only OPs can load it (Default off).'''
 :param new_val: True for requires OP status to activate'''
         self.op_activate_only = new_val
 
-    def optional_is_op(self, func):
+    def optional_is_op(func):
         '''Decorates the decorated function with WithOPs_mixin.is_op if the calling user
 has to be an OP to load/unload.'''
-        @WithOPs_mixin.is_op
-        def with_op(*args, **kwargs):
-            return func(*args, **kwargs)
+        def wraper(self, *args, **kwargs):
+            @WithOPs_mixin.is_op
+            def with_op(self, *args, **kwargs):
+                return func(self, *args, **kwargs)
 
-        def sans_op(*args, **kwargs):
-            return func(*args, **kwargs)
+            def sans_op(self, *args, **kwargs):
+                return func(self, *args, **kwargs)
 
-        return with_op if self.op_activate_only else sans_op
+            return with_op(self, *args, **kwargs) \
+                if self.op_activate_only \
+                else sans_op(self, *args, **kwargs)
+        return wraper
 
     @optional_is_op
     def load(self, caller_id):
