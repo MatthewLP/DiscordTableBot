@@ -6,6 +6,9 @@ from discord.ext import commands
 
 import TableBot
 
+BOOL_DICT = {'T':True, 't':True, 'true':True, 'True':True,
+             'F':False, 'f':False, 'false':False, 'False':False}
+
 def if_no_subcommand(func):
     @functools.wraps(func)
     async def wraper0(self, ctx):
@@ -194,6 +197,24 @@ May require OP privilage with the profile'''
     @_do_on_all_mentions(3)
     def profile_op_revoke(self, profile, op_id, user_id):
         return profile.pop_op(op_id, user_id)
+
+    @profile_op.command("require_for_load", pass_context = True, aliases = ["rfl"])
+    @_only_need_profile_name(3)
+    def profile_op_load(self, ctx):
+        user_id, cmd = id_and_cmd(ctx)
+        name = cmd[3]
+        profile = self.bot.get_profile(name)
+        if len(cmd) < 5:
+            out_lst = profile.flip_op_activate(user_id)
+        else:
+            try:
+                out_lst = profile.set_op_activate(user_id, BOOL_DICT[cmd[4]])
+            except KeyError as error:
+                out_lst = profile.flip_op_activate(user_id)
+        if out_lst is None:
+            out_lst = [profile.name, ' will ', '' if profile.get_op_activate() else 'not ',
+                       'require OP privilage to load and unload.']
+        return out_lst
 
 def id_and_cmd(ctx: commands.Context):
     '''Returns the message author id and the output of cmd_split'''

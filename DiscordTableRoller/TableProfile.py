@@ -71,6 +71,14 @@ modify the profile. With an option that only OPs can load it (Default off).'''
 :param new_val: True for requires OP status to activate'''
         self.op_activate_only = new_val
 
+    @WithOPs_mixin.is_curator
+    def flip_op_activate(self, caller_id):
+        '''Changes weather or not you have to be an OP to load and unload the profile.'''
+        self.op_activate_only = not self.op_activate_only
+
+    def get_op_activate(self):
+        return self.op_activate_only
+
     def optional_is_op(func):
         '''Decorates the decorated function with WithOPs_mixin.is_op if the calling user
 has to be an OP to load/unload.'''
