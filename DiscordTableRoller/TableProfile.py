@@ -18,6 +18,30 @@ modify the profile. With an option that only OPs can load it (Default off).'''
         self.tables = {}
         self.active = False
         self.op_activate_only = False
+        self.bot.loop.call_soon(_save, self, True)
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['bot']
+        state['tables'] = set(self.tables)
+        return state
+
+    def __setstate__(self, state):
+        state['tables'] = [(key, None) for key in state['tables']]
+        self.__dict__.update(state)
+        self.bot = None
+
+    def set_bot(self, bot):
+        if self.bot and self.active:
+            self.unload(next(iter(self.OPs)))
+        self.bot = bot
+        if self.active:
+            self.load(next(iter(self.OPs)))
+
+    async def _save(self, do_again):
+        #pickle it
+        if do_again:
+            self.bot.loop.call_later(300, _save, self)
 
     @WithOPs_mixin.is_op
     async def push_table(self, caller_id, filepath):
