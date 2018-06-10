@@ -2,6 +2,7 @@
 discord_item_list'''
 import glob
 import traceback
+import pickle
 from discord.ext import commands
 
 from Table import Table
@@ -23,8 +24,23 @@ tables it has loaded and displaying information on those tables to users.'''
 
         self.tables = {}
         self.profiles = {}
-        self.load_files()
+        self._load_profiles()
         #add initalizers for members as needed
+
+    def _load_profiles(self):
+        '''Attempts to load every pickle file in the ./profiles/ directory into profiles.'''
+        try:
+            self.tables.clear()
+            for filename in glob.glob("profiles/*.pickle"):
+                with open(filename, 'rb') as file:
+                    temp = pickle.load(file)
+                self.profiles[temp.name] = temp
+                temp.set_bot(self)
+        except():
+            traceback.print_exc()
+            return False
+
+        return True
 
     def load_files(self):
         '''Attempts to load every csv file in the ./tables/ directory into table objects'''

@@ -1,4 +1,4 @@
-rwhodunit,rWho Dies?,rWhat Happens?,rKill Someone,rRIP,rrip
+whodunit,Who Dies?,What Happens?,Kill Someone,RIP,rip
 p_weight,name,recur,,,
 4,William,./recursive/who_william.csv,,,
 4,Roger,./recursive/who_roger.csv,,,

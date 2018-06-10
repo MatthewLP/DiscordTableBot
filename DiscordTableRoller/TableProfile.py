@@ -1,5 +1,6 @@
 '''Defines the TableProfile class'''
 import asyncio
+import pickle
 from glob import glob
 from os.path import normpath
 
@@ -18,7 +19,8 @@ modify the profile. With an option that only OPs can load it (Default off).'''
         self.tables = {}
         self.active = False
         self.op_activate_only = False
-        self.bot.loop.call_soon(_save, self, True)
+        if bot:
+            self.bot.loop.call_soon(TableProfile._save, self, True)
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -27,7 +29,7 @@ modify the profile. With an option that only OPs can load it (Default off).'''
         return state
 
     def __setstate__(self, state):
-        state['tables'] = [(key, None) for key in state['tables']]
+        state['tables'] = dict([(key, None) for key in state['tables']])
         self.__dict__.update(state)
         self.bot = None
 
@@ -38,10 +40,11 @@ modify the profile. With an option that only OPs can load it (Default off).'''
         if self.active:
             self.load(next(iter(self.OPs)))
 
-    async def _save(self, do_again):
-        #pickle it
+    def _save(self, do_again=False):
+        with open("./profiles/{}.pickle".format(self.name),'wb') as file:
+            pckl = pickle.dump(self, file)
         if do_again:
-            self.bot.loop.call_later(300, _save, self)
+            self.bot.loop.call_later(300, TableProfile._save, self, True)
 
     @WithOPs_mixin.is_op
     async def push_table(self, caller_id, filepath):
@@ -67,6 +70,7 @@ modify the profile. With an option that only OPs can load it (Default off).'''
                     self.load(caller_id)
             else:
                 out_lst = ['`', filepath, '` does not exist.']
+        self._save()
         return out_lst
 
     @WithOPs_mixin.is_op
@@ -85,6 +89,7 @@ modify the profile. With an option that only OPs can load it (Default off).'''
             out_lst = ['`', filepath, '` has been removed from ', self.name, '.']
         else:
             out_lst = ['`', filepath, '` is not in ', self.name, '.']
+        self._save()
         return out_lst
 
     @WithOPs_mixin.is_curator
@@ -94,11 +99,13 @@ modify the profile. With an option that only OPs can load it (Default off).'''
     type: anything hashable
 :param new_val: True for requires OP status to activate'''
         self.op_activate_only = new_val
+        self._save()
 
     @WithOPs_mixin.is_curator
     def flip_op_activate(self, caller_id):
         '''Changes weather or not you have to be an OP to load and unload the profile.'''
         self.op_activate_only = not self.op_activate_only
+        self._save()
 
     def get_op_activate(self):
         return self.op_activate_only

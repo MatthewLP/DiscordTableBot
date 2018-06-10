@@ -184,6 +184,7 @@ _pkginfo.txt
 !*.[Cc]ache/
 
 # Others
+*profiles/
 *discordBots/
 *options.py
 ClientBin/
